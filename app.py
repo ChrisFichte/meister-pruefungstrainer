@@ -292,7 +292,7 @@ if modul == "🏆 Challenge & Leaderboard":
                     prompt = f"Erstelle eine IHK-Prüfungsaufgabe für Industriemeister Metall im Fach {tresor_fach}. Gib NUR die Aufgabenstellung zurück."
                     
                     try:
-                        resp = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
+                        resp = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
                         if resp.text:
                             eintrag = {
                                 "fach": tresor_fach,
@@ -362,32 +362,31 @@ if modul == "🤖 KI-Prüfungstrainer":
 
                     client = genai.Client(api_key=api_key)
                     
-                    # Modelle, die nacheinander versucht werden
-                    modelle = ['gemini-3.6-flash', 'gemini-1.5-flash']
+                    # Aktualisierte Modellliste mit aktiven Gemini 2.x Modellen
+                    modelle = ['gemini-2.5-flash', 'gemini-2.0-flash']
                     response = None
                     letzter_fehler = None
 
-                    # Automatische Versuche mit Warten bei 503
                     for model_name in modelle:
-                        for versuch in range(2):  # Max 2 Versuche pro Modell
+                        for versuch in range(3):  # Max 3 Versuche pro Modell bei 503-Überlastung
                             try:
                                 response = client.models.generate_content(
                                     model=model_name,
                                     contents=prompt,
                                 )
-                                if response:
+                                if response and response.text:
                                     break
                             except Exception as err:
                                 letzter_fehler = err
                                 time.sleep(2)  # 2 Sekunden warten vor dem nächsten Versuch
-                        if response:
+                        if response and response.text:
                             break
 
-                    if response:
+                    if response and response.text:
                         st.markdown("### 📝 Generierte Aufgabe")
                         st.write(response.text)
                     else:
-                        st.error(f"Server aktuell stark ausgelastet. Bitte in wenigen Sekunden erneut klicken. Details: {letzter_fehler}")
+                        st.error(f"Server aktuell stark ausgelastet oder Modell nicht erreichbar. Details: {letzter_fehler}")
 
                 except Exception as e:
                     st.error(f"Fehler bei der KI-Generierung: {e}")
